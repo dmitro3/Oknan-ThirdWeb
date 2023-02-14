@@ -1,16 +1,32 @@
-using UnityEngine;
-using Thirdweb;
 using System.Collections.Generic;
+using Thirdweb;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class ThirdwebSDKDemos : MonoBehaviour
 {
+
+   
+   public NFTData M_Data;
+
     private ThirdwebSDK sdk;
     private int count;
     public Text walletInfotext;
     public GameObject connectButtonsContainer;
     public GameObject walletInfoContainer;
     public Text resultText;
+
+    public GameObject balanceSuccessPopup;
+    public Text balanceResponseText;
+
+    public GameObject signSuccessPopup;
+    public Text signResponseText;
+
+    public GameObject ERC721Popup;
+    public Text ERC721ResponseText;
+
+    public GameObject ERC1155Popup;
+    public Text ERC1155ResponseText;
 
     void Start()
     {
@@ -78,9 +94,8 @@ public class ThirdwebSDKDemos : MonoBehaviour
 
     private async void ConnectWallet(WalletProvider provider)
     {
-        connectButtonsContainer.SetActive(false);
-        walletInfoContainer.SetActive(true);
-        walletInfotext.text = "Connecting...";
+
+        resultText.text = "Connecting...";
         try
         {
             string address = await sdk.wallet.Connect(new WalletConnection()
@@ -88,7 +103,10 @@ public class ThirdwebSDKDemos : MonoBehaviour
                 provider = provider,
                 chainId = 5 // Switch the wallet Goerli on connection
             });
-            walletInfotext.text = "Connected as: " + address;
+           
+            connectButtonsContainer.SetActive(false);
+            walletInfoContainer.SetActive(true);
+            walletInfotext.text = address;
         }
         catch (System.Exception e)
         {
@@ -98,33 +116,54 @@ public class ThirdwebSDKDemos : MonoBehaviour
 
     public async void OnBalanceClick()
     {
-        resultText.text = "Loading...";
-        CurrencyValue balance = await sdk.wallet.GetBalance();
-        resultText.text = "Balance: " + balance.displayValue.Substring(0, 5) + " " + balance.symbol;
+        balanceResponseText.text = "Loading...";
+        try
+        {
+            CurrencyValue balance = await sdk.wallet.GetBalance();
+            balanceResponseText.text = "Balance: " + balance.displayValue.Substring(0, 5) + " " + balance.symbol;
+            balanceSuccessPopup.SetActive(true);
+        }
+        catch (System.Exception e)
+        {
+            balanceResponseText.text = "Balance Error: " + e.Message;
+        }
+       
+
     }
 
     public async void OnSignClick()
     {
-        resultText.text = "Signing...";
+        signResponseText.text = "Signing...";
         try
         {
-            var data = await sdk.wallet.Authenticate("example.com");
-            resultText.text = "Sig: " + data.payload.address.Substring(0, 6) + "...";
+            var data = await sdk.wallet.Authenticate("com.Lumever.Oknan");
+            signResponseText.text = "Sign: " + data.payload.address.Substring(0, 6) + "...";
+            signSuccessPopup.SetActive(true);
         }
         catch (System.Exception e)
         {
-            resultText.text = "Auth Error: " + e.Message;
+            signResponseText.text = "Auth Error: " + e.Message;
         }
     }
 
     public async void GetERC721()
     {
-        // fetch single NFT
-        var contract = sdk.GetContract("0x2e01763fA0e15e07294D74B63cE4b526B321E389"); // NFT Drop
-        count++;
-        resultText.text = "Fetching Token: " + count;
-        NFT result = await contract.ERC721.Get(count.ToString());
-        resultText.text = result.metadata.name + "\nowned by " + result.owner.Substring(0, 6) + "...";
+
+        try
+        {
+            // fetch single NFT
+            var contract = sdk.GetContract("0x2e01763fA0e15e07294D74B63cE4b526B321E389"); // NFT Drop
+            count++;
+            ERC721ResponseText.text = "Fetching Token: " + count;
+            NFT result = await contract.ERC721.Get(count.ToString());
+            ERC721ResponseText.text = result.metadata.name + "\nowned by " + result.owner.Substring(0, 6) + "...";
+            ERC721Popup.SetActive(true);
+        }
+        catch (System.Exception e)
+        {
+            ERC721ResponseText.text =  e.Message;
+        }
+       
 
         // fetch all NFTs
         // resultText.text = "Fetching all NFTs";
@@ -144,19 +183,28 @@ public class ThirdwebSDKDemos : MonoBehaviour
 
     public async void GetERC1155()
     {
-        var contract = sdk.GetContract("0x86B7df0dc0A790789D8fDE4C604EF8187FF8AD2A");
+        try
+        {
+            var contract = sdk.GetContract("0x86B7df0dc0A790789D8fDE4C604EF8187FF8AD2A");
 
-        // Edition Drop
-        // Fetch single NFT
-        // count++;
-        // resultText.text = "Fetching Token: " + count;
-        // NFT result = await contract.ERC1155.Get(count.ToString());
-        // resultText.text = result.metadata.name + " (x" + result.supply + ")";
+            // Edition Drop
+            // Fetch single NFT
+            // count++;
+            // resultText.text = "Fetching Token: " + count;
+            // NFT result = await contract.ERC1155.Get(count.ToString());
+            // resultText.text = result.metadata.name + " (x" + result.supply + ")";
 
-        // fetch all NFTs
-        resultText.text = "Fetching all NFTs";
-        List<NFT> result = await contract.ERC1155.GetAll();
-        resultText.text = "Fetched " + result.Count + " NFTs";
+            // fetch all NFTs
+            ERC1155ResponseText.text = "Fetching all NFTs";
+            List<NFT> result = await contract.ERC1155.GetAll();
+            ERC1155ResponseText.text = "Fetched " + result.Count + " NFTs";
+            ERC1155Popup.SetActive(true);
+        }
+        catch (System.Exception e)
+        {
+            ERC1155ResponseText.text = e.Message;
+        }
+        
 
     }
 
@@ -172,22 +220,50 @@ public class ThirdwebSDKDemos : MonoBehaviour
     public async void MintERC721()
     {
         resultText.text = "SigMinting... (needs minter role to generate signature)";
-        // claim
-        // var contract = sdk.GetContract("0x2e01763fA0e15e07294D74B63cE4b526B321E389"); // NFT Drop
-        // resultText.text = "claiming...";
-        // var result = await contract.ERC721.Claim(1);
-        // Debug.Log("result id: " + result[0].id);
-        // Debug.Log("result receipt: " + result[0].receipt.transactionHash);
-        // resultText.text = "claimed tokenId: " + result[0].id;
+
+        string trait1;
+        string value1;
+        string trait2;
+        string value2;
+        string trait3;
+        string value3;
+
+        string theName = null;
+        string theDescription = null;
+        string TheImage = null;
+
+        Dictionary<string, object> myDictionary = new Dictionary<string, object>();
+
+        if (M_Data.DataCaptured)
+        {
+            theName = M_Data.GetName();
+            theDescription = M_Data.GetName();
+            TheImage = M_Data.GetImage();
+
+            List<NFTstorage.ERC721.Attribute> nAttributes = new List<NFTstorage.ERC721.Attribute>();
+            nAttributes = M_Data.GetAttributes();
+
+            trait1 = nAttributes[0].trait_type;
+            value1 = nAttributes[0].value.ToString();
+            trait2 = nAttributes[1].trait_type;
+            value2 = nAttributes[1].value.ToString();
+            trait3 = nAttributes[2].trait_type;
+            value3 = nAttributes[2].value.ToString();
+
+            myDictionary.Add(trait1, value1);
+            myDictionary.Add(trait2, value2);
+            myDictionary.Add(trait3, value3);
+        }
 
         // sig mint
         var contract = sdk.GetContract("0x8bFD00BD1D3A2778BDA12AFddE5E65Cca95082DF"); // NFT Collection
         var meta = new NFTMetadata()
         {
-            name = "Unity NFT",
-            description = "Minted From Unity (signature)",
-            image = "ipfs://QmbpciV7R5SSPb6aT9kEBAxoYoXBUsStJkMpxzymV4ZcVc"
-        };
+            name = theName,
+            description = theDescription,
+            image = TheImage,
+            properties = myDictionary
+    };
         string connectedAddress = await sdk.wallet.GetAddress();
         var payload = new ERC721MintPayload(connectedAddress, meta);
         try

@@ -13,7 +13,7 @@ public class BalanceMenu : MonoBehaviour
 
     void Start()
     {
-        sdk = new ThirdwebSDK("goerli");
+      
       
     }
 

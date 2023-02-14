@@ -23,7 +23,7 @@ public class NFTData : MonoBehaviour
         get => m_DataCaptured;
     }
 
-    public TMP_InputField theCid;
+    public TMP_Text theCid;
 
     public void  NFTMetadata()
     {

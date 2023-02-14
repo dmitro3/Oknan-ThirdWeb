@@ -2,13 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using Thirdweb;
 using UnityEngine.SceneManagement;
 
 namespace Oknan
 {
     public class MainMenu : MonoBehaviour
     {
-        
+        private ThirdwebSDK sdk;
         private GameObject GlobalManager;
         public GameObject pauseMenu;
         public GameObject nFTMenu;
@@ -27,6 +28,7 @@ namespace Oknan
         // Start is called before the first frame update
         void Awake()
         {
+            sdk = new ThirdwebSDK("goerli");
             GlobalManager = GameObject.FindGameObjectWithTag("Global");
             pauseMenu.SetActive(false);
         }
@@ -35,7 +37,7 @@ namespace Oknan
         void Update()
         {
 
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab))
             {
 
                 pauseMenu.SetActive(true);
@@ -58,15 +60,9 @@ namespace Oknan
 
         public void OpenVoucherMenu()
         {
-            if (GlobalManager.GetComponent<Global>().globalCoins > 0)
-            {
+            
                 FindObjectOfType<AudioManager2>().Play("Pop");
                 VoucherMenu.SetActive(true);
-            }
-            else
-            {
-                Debug.Log("Get More Coins!");
-            }
         }
 
         public void OpenNFTDataMenu()
@@ -201,6 +197,17 @@ namespace Oknan
         public void OpenMarketplace()
         {
             Application.OpenURL("https://marketplace-ui.onrender.com/");
+           
+        }
+
+        public async void DisconnectWallet()
+        {
+            await sdk.wallet.Disconnect();
+            // Clear Account
+            PlayerPrefs.SetString("Account", "0x0000000000000000000000000000000000000001");
+            // go to login scene
+            SceneManager.LoadScene(0);
+
         }
     }
 }
